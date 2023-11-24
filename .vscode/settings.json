@@ -1,0 +1,28 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "map": "cpp",
+        "__split_buffer": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "iostream": "cpp",
+        "compare": "cpp",
+        "fstream": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "utility": "cpp",
+        "ios": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "streambuf": "cpp",
+        "locale": "cpp",
+        "tuple": "cpp",
+        "__functional_base": "cpp",
+        "array": "cpp",
+        "variant": "cpp",
+        "new": "cpp",
+        "__config": "cpp",
+        "system_error": "cpp",
+        "iosfwd": "cpp"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "echo",
+            "type": "shell",
+            "command": "echo Hello"
+        },
+        {
+            "label": "Cmake Debug",
+            "type": "shell",
+            "command": "cd build_debug && cmake -DCMAKE_BUILD_TYPE=Debug .. && make",
+        },
+        {
+            "label": "Cmake Release",
+            "type": "shell",
+            "command": "cd build_release && cmake -DCMAKE_BUILD_TYPE=Release .. && make",
+        },
+    ]
+}

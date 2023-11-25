@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "Instance.h"
-#include "ConstraintTable.h"
 
 class LLNode // low-level node
 {

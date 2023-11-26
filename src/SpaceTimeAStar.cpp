@@ -34,9 +34,7 @@ Path SpaceTimeAStar::findSuboptimalPath()
     // generate start and add it to the OPEN & FOCAL list
     auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
 
-    num_generated++;
-    start->open_handle = open_list.push(start);
-    start->in_openlist = true;
+    pushNode(start);
     allNodes_table.insert(start);
     min_f_val = (int) start->getFVal();
     // lower_bound = int(w * min_f_val));
@@ -69,12 +67,13 @@ Path SpaceTimeAStar::findSuboptimalPath()
             auto it = allNodes_table.find(next);
             if (it == allNodes_table.end())
             {
+                // not in hash table
                 pushNode(next);
                 allNodes_table.insert(next);
                 continue;
             }
-            // update existing node's if needed (only in the open_list)
 
+            // update existing node's if needed (only in the open_list)
             auto existing_next = *it;
             if (existing_next->getFVal() > next->getFVal()) // if f-val decreased through this new path
             {
@@ -86,7 +85,7 @@ Path SpaceTimeAStar::findSuboptimalPath()
                 else
                 {
                     bool update_open = false;
-                    if (existing_next->getFVal() > next_g_val + next_h_val)
+                    if (existing_next->getFVal() > next->getFVal())
                         update_open = true;
 
                     existing_next->copy(*next);	// update existing node

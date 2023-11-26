@@ -1,0 +1,11 @@
+runtime,path cost,#node expanded,#node generated,instance name,trial index
+0.205868,139,140,686,benchmark/Paris_1_256-random-1.scen,0
+0.203707,70,71,329,benchmark/Paris_1_256-random-1.scen,1
+0.208204,245,246,1188,benchmark/Paris_1_256-random-1.scen,2
+0.203907,257,258,1260,benchmark/Paris_1_256-random-1.scen,3
+0.202364,52,53,252,benchmark/Paris_1_256-random-1.scen,4
+0.202962,226,227,1098,benchmark/Paris_1_256-random-1.scen,5
+0.1985,123,124,601,benchmark/Paris_1_256-random-1.scen,6
+0.205186,81,82,398,benchmark/Paris_1_256-random-1.scen,7
+0.203435,90,91,440,benchmark/Paris_1_256-random-1.scen,8
+0.197134,164,165,799,benchmark/Paris_1_256-random-1.scen,9

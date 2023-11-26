@@ -51,3 +51,37 @@ void SingleAgentSolver::compute_heuristics()
 		}
 	}
 }
+
+
+void SingleAgentSolver::saveResults(const string &fileName, const string &instanceName) const
+{
+	std::ifstream infile(fileName);
+	bool exist = infile.good();
+	infile.close();
+	if (!exist)
+	{
+		ofstream addHeads(fileName);
+		addHeads << "runtime,path cost," <<
+			"#node expanded,#node generated," <<
+			"instance name,trial index" << endl;
+		addHeads.close();
+	}
+	ofstream stats(fileName, std::ios::app);
+	stats << runtime << "," << path_cost << "," <<
+		num_expanded << "," << num_generated << "," <<
+		instanceName << "," << trial_idx << endl;
+	stats.close();
+}
+
+void SingleAgentSolver::savePaths(const string &fileName) const
+{
+	std::ofstream output;
+    output.open(fileName, std::ios::app);
+	output << "Trial " << trial_idx << ": ";
+	for (const auto & t : planned_path)
+		output << "(" << instance.getRowCoordinate(t.location)
+				<< "," << instance.getColCoordinate(t.location) 
+				<< ")->";
+	output << endl;
+    output.close();
+}

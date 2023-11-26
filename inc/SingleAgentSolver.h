@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "Instance.h"
-#include "ConstraintTable.h"
 
 class LLNode // low-level node
 {
@@ -54,12 +53,7 @@ public:
 class SingleAgentSolver
 {
 public:
-	uint64_t num_expanded = 0;
-	uint64_t num_generated = 0;
-
-	double runtime_build_CT = 0; // runtime of building constraint table
-	double runtime_build_CAT = 0; // runtime of building conflict avoidance table
-
+	int trial_idx;
 	int start_location;
 	int goal_location;
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
@@ -74,15 +68,26 @@ public:
 	virtual string getName() const = 0;
 
 	list<int> getNextLocations(int curr) const; // including itself and its neighbors
-	list<int> getNeighbors(int curr) const { return instance.getNeighbors(curr); }
 
-	// int getStartLocation() const {return instance.start_locations[agent]; }
-	// int getGoalLocation() const {return instance.goal_locations[agent]; }
+	int getStartLocation() const {return instance.start_locations[trial_idx]; }
+	int getGoalLocation() const {return instance.goal_locations[trial_idx]; }
 
-	SingleAgentSolver(const Instance& instance, int agent) :
+	///////// statistics & results
+	float runtime;
+	uint64_t num_expanded = 0;
+	uint64_t num_generated = 0;
+	Path planned_path;
+	int path_cost;
+
+	void saveResults(const string &fileName, const string &instanceName) const;
+	void savePaths(const string &fileName) const;
+
+
+	SingleAgentSolver(const Instance& instance, int trial) :
 		instance(instance), //agent(agent), 
-		start_location(instance.start_locations[agent]),
-		goal_location(instance.goal_locations[agent])
+		start_location(instance.start_locations[trial]),
+		goal_location(instance.goal_locations[trial]),
+		trial_idx(trial)
 	{
 		compute_heuristics();
 	}
@@ -92,7 +97,7 @@ public:
 protected:
 	int min_f_val; // minimal f value in OPEN
 	// int lower_bound; // Threshold for FOCAL
-	double w = 1; // suboptimal bound
+	
 
 	void compute_heuristics();
 	int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }

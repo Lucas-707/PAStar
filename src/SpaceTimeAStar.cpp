@@ -27,7 +27,6 @@ Path SpaceTimeAStar::findOptimalPath()
 // lowerbound is an underestimation of the length of the path in order to speed up the search.
 Path SpaceTimeAStar::findSuboptimalPath()
 {
-    this->w = w;
     Path path;
     num_expanded = 0;
     num_generated = 0;
@@ -102,6 +101,8 @@ Path SpaceTimeAStar::findSuboptimalPath()
     }  // end while loop
 
     releaseNodes();
+    planned_path = path;
+    path_cost = path.size() - 1;
     return path;
 }
 
@@ -109,7 +110,7 @@ Path SpaceTimeAStar::findSuboptimalPath()
 inline AStarNode* SpaceTimeAStar::popNode()
 {
     auto node = open_list.top(); open_list.pop();
-    open_list.erase(node->open_handle);
+    // open_list.erase(node->open_handle);
     node->in_openlist = false;
     num_expanded++;
     return node;

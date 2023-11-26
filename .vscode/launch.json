@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cbs",
+            "name": "pastar",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build_debug/pastar",
-            "args": ["-m", "random-32-32-20.map", "-a", "random-32-32-20-random-1.scen", "-o", "test.csv", "--outputPaths=paths.txt", 
-                "-k", "80", "-t", "60", "-s", "2"],
+            "args": ["--seed=0", "--map=benchmark/Paris_1_256.map", "--agents=benchmark/Paris_1_256-random-1.scen", 
+                    "--output=test.csv", "--outputPaths=test_path.txt", "--algo=A*", "--trialNum=10"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

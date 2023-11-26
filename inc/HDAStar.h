@@ -57,7 +57,7 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	SpaceTimeAStar(const Instance& instance, int agent):
+	HDAStar(const Instance& instance, int agent):
 		SingleAgentSolver(instance, agent) {}
 
 private:
@@ -71,15 +71,15 @@ private:
 	int tag;
     int num_sends;
 
-	MPI_Datatype mpi_msg_type;
-	std::vector< std::vector<msg> > message_set;
-	std::vector< std::vector<msg> > send_buffers;
-	struct msg recv_buffer[MAX_RECV_BUFF_SIZE];
-	std::vector< MPI_Request* > send_requests;
-	
+	MPI_Datatype MPI_Msg;
 	struct msg {
         AStarNode* node;
     }; 
+	std::vector< std::vector<msg> > message_set;
+	std::vector< std::vector<msg> > send_buffers;
+	std::vector< MPI_Request* > send_requests;
+	struct msg recv_buffer[MAX_RECV_BUFF_SIZE];
+	
 
 	// define typedef for hash_map
 	typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
@@ -93,7 +93,7 @@ private:
 
 	void create_msg_mpi_datatype();
 	void clear_message_set();
-	int hash(LLNode* node); //returns the owner of the node
+	int hash(const LLNode* node); //returns the owner of the node
 	void send_message_set();
 	int receive_message_set(); //returns number of messages received
 	void add_msgs_to_open_list(int num_msgs_recvd);

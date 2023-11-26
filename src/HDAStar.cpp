@@ -23,18 +23,18 @@ Path HDAStar::findOptimalPath()
 
 int HDAStar::hash(const LLNode* node)
 {
+    // need to update the hash function
     return node->location % nproc;
 }
 
 
 void HDAStar::create_msg_mpi_datatype()
 {
-    MPI_Datatype MPI_Msg;
     MPI_Type_contiguous(sizeof(msg), MPI_BYTE, &MPI_Msg);
     MPI_Type_commit(&MPI_Msg);
 }
 
-struct msg HDAStar::create_msg(AStarNode* node)
+HDAStar::msg HDAStar::create_msg(AStarNode* node)
 {
     struct msg msg_;
     msg_.node = node;
@@ -98,7 +98,7 @@ void HDAStar::add_msgs_to_open_list(int num_msgs){
     for(int i = 0; i < num_msgs; i++)
     {
         msg_ = recv_buffer[i];
-        next = msg_.node;
+        auto next = msg_.node;
         // try to retrieve it from the hash table
         auto it = allNodes_table.find(next);
         if (it == allNodes_table.end())
@@ -147,21 +147,21 @@ Path HDAStar::findSuboptimalPath()
 
 	MPI_Request dst_req, barrier_req;
 
-    this->w = w;
     Path path;
     num_expanded = 0;
     num_generated = 0;
 
-    if (hash(start_location) == pid)
+    // generate start and add it to the OPEN & FOCAL list
+    auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
+    if (hash(start) == pid)
     {
-        // generate start and add it to the OPEN & FOCAL list
-        auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
         pushNode(start);
         allNodes_table.insert(start);
-        // min_f_val = (int) start->getFVal();
     }
 
-    int dst_pid = hash(goal_location), dst_rcv, dst_flag = 0, barrier_flag = 0;
+    auto goal_dummy = AStarNode(goal_location, 0, my_heuristic[goal_location], nullptr, 0, 0);
+    int dst_pid = hash(&goal_dummy);
+    int dst_rcv, dst_flag, barrier_flag = 0;
     if (dst_pid != pid)
     {
         //in this broadcast we will wait for information about whether the destination has been found
@@ -187,6 +187,7 @@ Path HDAStar::findSuboptimalPath()
             // check if the popped node is a goal
             if (curr->location == goal_location) // arrive at the goal location
             {
+                // the first to find goal might not be optimal
                 if (!dst_found)
                 {
                     dst_found = true;
@@ -211,7 +212,7 @@ Path HDAStar::findSuboptimalPath()
                 auto next = new AStarNode(next_location, next_g_val, next_h_val,
                                         curr, next_timestep);
 
-                message_set[hash(next_location)].push_back(create_msg(next));
+                message_set[hash(next)].push_back(create_msg(next));
             }  
         } else {
             // open list is empty

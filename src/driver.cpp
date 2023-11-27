@@ -10,7 +10,7 @@
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include "SpaceTimeAStar.h"
-
+#include "HDAStar.h"
 
 /* Main function */
 int main(int argc, char** argv)
@@ -52,19 +52,45 @@ int main(int argc, char** argv)
 		vm["trialNum"].as<int>());
 	//////////////////////////////////////////////////////////////////////
     // initialize the solver
-	
-	for (int i=0; i < vm["trialNum"].as<int>(); i++) {
-		Timer timer;
-		SpaceTimeAStar* planner = new SpaceTimeAStar(instance, i);
-		Path path = planner->findOptimalPath();
-		float runtime = timer.elapsed();
-		planner->runtime = runtime; 
-		if (vm.count("output"))
-			planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
-		if (vm.count("outputPaths"))
-			planner->savePaths(vm["outputPaths"].as<string>());
-		delete planner;
+	if (vm["algo"].as<string>() == "A*")
+	{
+		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+			Timer timer;
+			SpaceTimeAStar* planner = new SpaceTimeAStar(instance, i);
+			Path path = planner->findOptimalPath();
+			float runtime = timer.elapsed();
+			planner->runtime = runtime; 
+			if (vm.count("output"))
+				planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
+			if (vm.count("outputPaths"))
+				planner->savePaths(vm["outputPaths"].as<string>());
+			delete planner;
+		}
 	}
+	else if (vm["algo"].as<string>() == "HDA*")
+	{	
+		Timer timer;
+		int pid;
+		int nproc = vm["threads"].as<int>();
+		// Initialize MPI
+		MPI_Init(&argc, &argv);
+		MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+		MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+		HDAStar* planner = new HDAStar(instance, i, nproc, pid);
+		Path path = planner->findOptimalPath();
+
+		if (pid == 0) { // should be the process that find goal
+			if (vm.count("output"))
+					planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
+			if (vm.count("outputPaths"))
+				planner->savePaths(vm["outputPaths"].as<string>());
+			float runtime = timer.elapsed();
+			planner->runtime = runtime; 
+		}
+		delete planner;
+		MPI_Finalize();
+	}
+
 	
 
 

@@ -57,8 +57,9 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	HDAStar(const Instance& instance, int agent):
-		SingleAgentSolver(instance, agent) {}
+	HDAStar(const Instance& instance, int agent, int nproc, int pid):
+		SingleAgentSolver(instance, agent), nproc(nproc), pid(pid)
+	{}
 
 private:
 	// define typedefs and handles for heap
@@ -66,10 +67,10 @@ private:
 	heap_open_t open_list;
 	int pid;
 	int nproc;
-	bool dst_found;
+	bool dst_found = false;
 	bool in_barrier_mode = false;
-	int tag;
-    int num_sends;
+	int tag = 0;
+    int num_sends = 0;
 
 	MPI_Datatype MPI_Msg;
 	struct msg {

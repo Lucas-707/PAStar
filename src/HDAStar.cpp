@@ -270,7 +270,6 @@ Path HDAStar::findSuboptimalPath()
     return path;
 }
 
-
 inline AStarNode* HDAStar::popNode()
 {
     auto node = open_list.top(); open_list.pop();
@@ -280,14 +279,12 @@ inline AStarNode* HDAStar::popNode()
     return node;
 }
 
-
 inline void HDAStar::pushNode(AStarNode* node)
 {
     node->open_handle = open_list.push(node);
     node->in_openlist = true;
     num_generated++;
 }
-
 
 
 void HDAStar::releaseNodes()

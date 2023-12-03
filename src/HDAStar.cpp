@@ -136,6 +136,44 @@ void HDAStar::add_msgs_to_open_list(int num_msgs){
 
 }
 
+void HDAStar::add_local_nodes(vector<HDAStar::msg>& local_nodes){
+    for(int i = 0; i < local_nodes.size(); i++)
+    {
+        auto next = local_nodes[i].node;
+        // try to retrieve it from the hash table
+        auto it = allNodes_table.find(next);
+        if (it == allNodes_table.end())
+        {
+            // not in hash table
+            pushNode(next);
+            allNodes_table.insert(next);
+            continue;
+        }
+        // update existing node's if needed (only in the open_list)
+        auto existing_next = *it;
+        if (existing_next->getFVal() > next->getFVal()) // if f-val decreased through this new path
+        {
+            if (!existing_next->in_openlist) // if it is in the closed list (reopen)
+            {
+                existing_next->copy(*next);
+                pushNode(existing_next);
+            }
+            else
+            {
+                bool update_open = false;
+                if (existing_next->getFVal() > next->getFVal())
+                    update_open = true;
+
+                existing_next->copy(*next);	// update existing node
+
+                if (update_open)
+                    open_list.increase(existing_next->open_handle);  // increase because f-val improved
+            }
+        }
+
+    }
+}
+
 // find path by time-space A* search
 // Returns a bounded-suboptimal path that satisfies the constraints of the give node  while
 // minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
@@ -178,16 +216,19 @@ Path HDAStar::findSuboptimalPath()
     send_requests.resize(nproc, nullptr);
 
     dst_found = false;
-
+    int iter = 0;
     while (true) {
         // Step 2: process current open list and populate message set
+        // printf("open list size = %d\n", open_list.size());
         if (!open_list.empty() && (!in_barrier_mode)){
             auto* curr = popNode();
+            // printf("pop node location %d, gval %d\n", curr->location, curr->g_val);
             assert(curr->location >= 0);
             // check if the popped node is a goal
             if (curr->location == goal_location) // arrive at the goal location
             {
                 // the first to find goal might not be optimal
+                printf("found destination");
                 if (!dst_found)
                 {
                     dst_found = true;
@@ -196,6 +237,7 @@ Path HDAStar::findSuboptimalPath()
 		            MPI_Ibcast(&dst_rcv, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
                     updatePath(curr, path);
                 }
+                break;
                 continue;
             }
 
@@ -213,7 +255,8 @@ Path HDAStar::findSuboptimalPath()
                                         curr, next_timestep);
 
                 message_set[hash(next)].push_back(create_msg(next));
-            }  
+            }
+            add_local_nodes(message_set[pid]);
         } else {
             // open list is empty
             if (!dst_found)
@@ -264,6 +307,11 @@ Path HDAStar::findSuboptimalPath()
         int num_msgs = receive_message_set();
 
         add_msgs_to_open_list(num_msgs);
+
+        iter += 1;
+        if (iter > 1000000) {
+            break;
+        }
     }
 
     releaseNodes();
@@ -272,8 +320,9 @@ Path HDAStar::findSuboptimalPath()
 
 inline AStarNode* HDAStar::popNode()
 {
-    auto node = open_list.top(); open_list.pop();
-    open_list.erase(node->open_handle);
+    auto node = open_list.top();
+    open_list.pop();
+    // open_list.erase(node->open_handle);
     node->in_openlist = false;
     num_expanded++;
     return node;

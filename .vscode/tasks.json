@@ -11,12 +11,12 @@
         {
             "label": "Cmake Debug",
             "type": "shell",
-            "command": "cd build_debug && cmake -DCMAKE_BUILD_TYPE=Debug .. && make",
+            "command": "cd build_debug && cmake -DCMAKE_BUILD_TYPE=Debug .. && make && cd ..",
         },
         {
             "label": "Cmake Release",
             "type": "shell",
-            "command": "cd build_release && cmake -DCMAKE_BUILD_TYPE=Release .. && make",
+            "command": "cd build_release && cmake -DCMAKE_BUILD_TYPE=Release .. && make && cd ..",
         },
     ]
 }

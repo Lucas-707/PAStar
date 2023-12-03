@@ -58,6 +58,7 @@ private:
 	void send_message_set();
 	int receive_message_set(); //returns number of messages received
 	void add_msgs_to_open_list(int num_msgs_recvd);
+	void add_local_nodes(vector<HDAStar::msg>& local_nodes);
 	struct msg create_msg(AStarNode* node);
 
 };

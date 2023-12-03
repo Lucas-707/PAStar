@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build_debug/pastar",
             "args": ["--seed=0", "--map=benchmark/Paris_1_256.map", "--agents=benchmark/Paris_1_256-random-1.scen", 
-                    "--output=test.csv", "--outputPaths=test_path.txt", "--algo=A*", "--trialNum=10"],
+                    "--output=test.csv", "--outputPaths=test_path.txt", "--algo=HDA*", "--trialNum=1"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

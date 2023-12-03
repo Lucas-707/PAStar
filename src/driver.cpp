@@ -9,6 +9,7 @@
 */
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
+#include <unistd.h>
 #include "SpaceTimeAStar.h"
 #include "HDAStar.h"
 
@@ -32,6 +33,7 @@ int main(int argc, char** argv)
 		("trialNum,k", po::value<int>()->default_value(1), "number of trials")
 		("cutoffTime", po::value<double>()->default_value(60), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(1), "screen option (0: none; 1: results; 2:all)")
+		("debugwait", po::value<int>()->default_value(0), "wait for 5 secs for vscode debugger")
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -69,24 +71,30 @@ int main(int argc, char** argv)
 	}
 	else if (vm["algo"].as<string>() == "HDA*")
 	{	
+		if (vm["debugwait"].as<int>())
+			sleep(10);
+
 		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
 			Timer timer;
-			int pid;
-			int nproc = vm["threads"].as<int>();
+			int pid, nproc;
+			// int nproc = vm["threads"].as<int>();
+			// printf("nproc = %d\n", nproc);
 			// Initialize MPI
 			MPI_Init(&argc, &argv);
 			MPI_Comm_rank(MPI_COMM_WORLD, &pid);
 			MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+			printf("after init nproc = %d\n", nproc);
 			HDAStar* planner = new HDAStar(instance, i, nproc, pid);
 			Path path = planner->findOptimalPath();
+			MPI_Barrier(MPI_COMM_WORLD);
 
 			if (pid == 0) { // should be the process that find goal
-				if (vm.count("output"))
-						planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
-				if (vm.count("outputPaths"))
-					planner->savePaths(vm["outputPaths"].as<string>());
 				float runtime = timer.elapsed();
 				planner->runtime = runtime; 
+				if (vm.count("output"))
+					planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
+				if (vm.count("outputPaths"))
+					planner->savePaths(vm["outputPaths"].as<string>());
 			}
 			delete planner;
 			MPI_Finalize();

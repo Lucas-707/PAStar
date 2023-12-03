@@ -24,7 +24,8 @@ public:
 		{
 			size_t loc_hash = std::hash<int>()(n->location);
 			size_t timestep_hash = std::hash<int>()(n->timestep);
-			return (loc_hash ^ (timestep_hash << 1));
+			// return (loc_hash ^ (timestep_hash << 1));
+			return loc_hash;
 		}
 	};
 
@@ -36,8 +37,9 @@ public:
 		bool operator()(const AStarNode* s1, const AStarNode* s2) const
 		{
 			return (s1 == s2) || (s1 && s2 &&
-                        s1->location == s2->location &&
-                        s1->timestep == s2->timestep );
+                        s1->location == s2->location);
+						// && s1->timestep == s2->timestep 
+						// );
 		}
 	};
 };

@@ -153,6 +153,7 @@ void HDAStar::add_local_nodes(vector<HDAStar::msg>& local_nodes){
         auto existing_next = *it;
         if (existing_next->getFVal() > next->getFVal()) // if f-val decreased through this new path
         {
+            continue;
             if (!existing_next->in_openlist) // if it is in the closed list (reopen)
             {
                 existing_next->copy(*next);
@@ -228,7 +229,6 @@ Path HDAStar::findSuboptimalPath()
             if (curr->location == goal_location) // arrive at the goal location
             {
                 // the first to find goal might not be optimal
-                printf("found destination");
                 if (!dst_found)
                 {
                     dst_found = true;
@@ -237,7 +237,6 @@ Path HDAStar::findSuboptimalPath()
 		            MPI_Ibcast(&dst_rcv, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
                     updatePath(curr, path);
                 }
-                break;
                 continue;
             }
 
@@ -308,13 +307,11 @@ Path HDAStar::findSuboptimalPath()
 
         add_msgs_to_open_list(num_msgs);
 
-        iter += 1;
-        if (iter > 1000000) {
-            break;
-        }
     }
 
     releaseNodes();
+    planned_path = path;
+    path_cost = path.size() - 1;
     return path;
 }
 

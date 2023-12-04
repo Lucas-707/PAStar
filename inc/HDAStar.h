@@ -34,7 +34,7 @@ private:
 
 	MPI_Datatype MPI_Msg;
 	struct msg {
-        AStarNode* node;
+        AStarNode node;
     }; 
 	std::vector< std::vector<msg> > message_set;
 	std::vector< std::vector<msg> > send_buffers;
@@ -58,7 +58,7 @@ private:
 	void send_message_set();
 	int receive_message_set(); //returns number of messages received
 	void add_msgs_to_open_list(int num_msgs_recvd);
-	void add_local_nodes(vector<HDAStar::msg>& local_nodes);
+	void add_local_node(AStarNode* next);
 	struct msg create_msg(AStarNode* node);
 
 };

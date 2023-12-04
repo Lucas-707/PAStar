@@ -90,12 +90,12 @@ int HDAStar::receive_message_set()
 
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
     }
-    for (int i=0; i<buf_size; i++) {
-        auto node = recv_buffer[i].node;
-        printf("thread %d received node loc %d \n", pid, node.location);
-        cout.flush();
-        break;
-    }
+    // for (int i=0; i<buf_size; i++) {
+    //     auto node = recv_buffer[i].node;
+    //     printf("thread %d received node loc %d \n", pid, node.location);
+    //     cout.flush();
+    //     break;
+    // }
     return buf_size;
 }
 
@@ -227,10 +227,10 @@ Path HDAStar::findSuboptimalPath()
         //     printf("iter start pid = %d\n", pid);
         if (!open_list.empty() && (!in_barrier_mode)){
             auto* curr = popNode();
-            if (iter % 20 == 0) {
-                printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
-                std::cout.flush();
-            }
+            // if (iter % 20 == 0) {
+            //     printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
+            //     std::cout.flush();
+            // }
             assert(curr->location >= 0);
             // check if the popped node is a goal
             if (curr->location == goal_location) // arrive at the goal location
@@ -242,7 +242,7 @@ Path HDAStar::findSuboptimalPath()
                     dst_rcv = curr->getFVal();
                     // broadcast the cost of this path to all processors
 		            MPI_Ibcast(&dst_rcv, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
-                    updatePath(curr, path);
+                    // updatePath(curr, path);
                 }
                 continue;
             }

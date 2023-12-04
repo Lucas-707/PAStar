@@ -93,8 +93,8 @@ int main(int argc, char** argv)
 				planner->runtime = runtime; 
 				if (vm.count("output"))
 					planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
-				if (vm.count("outputPaths"))
-					planner->savePaths(vm["outputPaths"].as<string>());
+				// if (vm.count("outputPaths"))
+				// 	planner->savePaths(vm["outputPaths"].as<string>());
 			}
 			delete planner;
 			MPI_Finalize();

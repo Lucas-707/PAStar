@@ -14,3 +14,4 @@ runtime,path cost,#node expanded,#node generated,instance name,trial index
 0.949898,139,47096,47096,benchmark/Paris_1_256-random-1.scen,0
 1.2765,139,47096,47096,benchmark/Paris_1_256-random-1.scen,0
 406.542,139,47096,47096,benchmark/Paris_1_256-random-1.scen,0
+2.99738,139,47096,47096,benchmark/Paris_1_256-random-1.scen,0

@@ -87,7 +87,12 @@ int HDAStar::receive_message_set()
         //receive_buffer   
         MPI_Recv(recv_buffer+buf_size, size, MPI_Msg, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         buf_size += size;
+
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+    }
+    for (int i=0; i<buf_size; i++) {
+        auto node = recv_buffer[i].node;
+        printf("received node loc %d \n", node->location);
     }
     return buf_size;
 }
@@ -221,9 +226,11 @@ Path HDAStar::findSuboptimalPath()
     while (true) {
         // Step 2: process current open list and populate message set
         // printf("open list size = %d\n", open_list.size());
+        if (pid == 0)
+            printf("iter start pid = %d\n", pid);
         if (!open_list.empty() && (!in_barrier_mode)){
             auto* curr = popNode();
-            // printf("pop node location %d, gval %d\n", curr->location, curr->g_val);
+            printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
             assert(curr->location >= 0);
             // check if the popped node is a goal
             if (curr->location == goal_location) // arrive at the goal location

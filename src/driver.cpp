@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	else if (vm["algo"].as<string>() == "HDA*")
 	{	
 		if (vm["debugwait"].as<int>())
-			sleep(20);
+			sleep(15);
 
 		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
 			Timer timer;

@@ -37,7 +37,7 @@ void HDAStar::create_msg_mpi_datatype()
 HDAStar::msg HDAStar::create_msg(AStarNode* node)
 {
     struct msg msg_;
-    msg_.node = node;
+    msg_.node = *node;
     return msg_;
 }
 
@@ -92,7 +92,9 @@ int HDAStar::receive_message_set()
     }
     for (int i=0; i<buf_size; i++) {
         auto node = recv_buffer[i].node;
-        printf("received node loc %d \n", node->location);
+        printf("thread %d received node loc %d \n", pid, node.location);
+        cout.flush();
+        break;
     }
     return buf_size;
 }
@@ -103,7 +105,8 @@ void HDAStar::add_msgs_to_open_list(int num_msgs){
     for(int i = 0; i < num_msgs; i++)
     {
         msg_ = recv_buffer[i];
-        auto next = msg_.node;
+        AStarNode* next = new AStarNode;
+        next->copy(msg_.node);
         // try to retrieve it from the hash table
         auto it = allNodes_table.find(next);
         if (it == allNodes_table.end())
@@ -141,42 +144,36 @@ void HDAStar::add_msgs_to_open_list(int num_msgs){
 
 }
 
-void HDAStar::add_local_nodes(vector<HDAStar::msg>& local_nodes){
-    for(int i = 0; i < local_nodes.size(); i++)
+void HDAStar::add_local_node(AStarNode *next){
+    // try to retrieve it from the hash table
+    auto it = allNodes_table.find(next);
+    if (it == allNodes_table.end())
     {
-        auto next = local_nodes[i].node;
-        // try to retrieve it from the hash table
-        auto it = allNodes_table.find(next);
-        if (it == allNodes_table.end())
+        // not in hash table
+        pushNode(next);
+        allNodes_table.insert(next);
+        return;
+    }
+    // update existing node's if needed (only in the open_list)
+    auto existing_next = *it;
+    if (existing_next->getFVal() > next->getFVal()) // if f-val decreased through this new path
+    {
+        if (!existing_next->in_openlist) // if it is in the closed list (reopen)
         {
-            // not in hash table
-            pushNode(next);
-            allNodes_table.insert(next);
-            continue;
+            existing_next->copy(*next);
+            pushNode(existing_next);
         }
-        // update existing node's if needed (only in the open_list)
-        auto existing_next = *it;
-        if (existing_next->getFVal() > next->getFVal()) // if f-val decreased through this new path
+        else
         {
-            continue;
-            if (!existing_next->in_openlist) // if it is in the closed list (reopen)
-            {
-                existing_next->copy(*next);
-                pushNode(existing_next);
-            }
-            else
-            {
-                bool update_open = false;
-                if (existing_next->getFVal() > next->getFVal())
-                    update_open = true;
+            bool update_open = false;
+            if (existing_next->getFVal() > next->getFVal())
+                update_open = true;
 
-                existing_next->copy(*next);	// update existing node
+            existing_next->copy(*next);	// update existing node
 
-                if (update_open)
-                    open_list.increase(existing_next->open_handle);  // increase because f-val improved
-            }
+            if (update_open)
+                open_list.increase(existing_next->open_handle);  // increase because f-val improved
         }
-
     }
 }
 
@@ -226,11 +223,14 @@ Path HDAStar::findSuboptimalPath()
     while (true) {
         // Step 2: process current open list and populate message set
         // printf("open list size = %d\n", open_list.size());
-        if (pid == 0)
-            printf("iter start pid = %d\n", pid);
+        // if (pid == 0)
+        //     printf("iter start pid = %d\n", pid);
         if (!open_list.empty() && (!in_barrier_mode)){
             auto* curr = popNode();
-            printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
+            if (iter % 20 == 0) {
+                printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
+                std::cout.flush();
+            }
             assert(curr->location >= 0);
             // check if the popped node is a goal
             if (curr->location == goal_location) // arrive at the goal location
@@ -261,8 +261,11 @@ Path HDAStar::findSuboptimalPath()
                                         curr, next_timestep);
 
                 message_set[hash(next)].push_back(create_msg(next));
+                if (hash(next) == pid) {
+                    add_local_node(next);
+                }
             }
-            add_local_nodes(message_set[pid]);
+            
         } else {
             // open list is empty
             if (!dst_found)
@@ -313,7 +316,7 @@ Path HDAStar::findSuboptimalPath()
         int num_msgs = receive_message_set();
 
         add_msgs_to_open_list(num_msgs);
-
+        iter ++;
     }
 
     releaseNodes();

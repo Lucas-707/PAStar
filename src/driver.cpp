@@ -77,15 +77,16 @@ int main(int argc, char** argv)
 		if (vm["debugwait"].as<int>())
 			sleep(15);
 
+
+		// Initialize MPI
+		int pid, nproc;
+		MPI_Init(&argc, &argv);
+		MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+		MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+			MPI_Barrier(MPI_COMM_WORLD);
+
 			Timer timer;
-			int pid, nproc;
-			// int nproc = vm["threads"].as<int>();
-			// printf("nproc = %d\n", nproc);
-			// Initialize MPI
-			MPI_Init(&argc, &argv);
-			MPI_Comm_rank(MPI_COMM_WORLD, &pid);
-			MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 			HDAStar* planner = new HDAStar(instance, i, nproc, pid);
 			planner->heuristics_time += timer.elapsed();
 			Timer path_timer;
@@ -102,8 +103,9 @@ int main(int argc, char** argv)
 				// 	planner->savePaths(vm["outputPaths"].as<string>());
 			}
 			delete planner;
-			MPI_Finalize();
+			
 		}
+		MPI_Finalize();
 	}
 
 	

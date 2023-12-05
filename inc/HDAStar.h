@@ -17,9 +17,12 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	HDAStar(const Instance& instance, int agent, int nproc, int pid):
+	HDAStar(const Instance& instance, int agent, int nproc_, int pid_):
 		SingleAgentSolver(instance, agent)
-	{ nproc = nproc; pid = pid; }
+	{ 
+		nproc = nproc_; 
+		pid = pid_; 
+	}
 
 private:
 	// define typedefs and handles for heap

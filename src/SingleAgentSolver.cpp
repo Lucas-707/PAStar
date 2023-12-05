@@ -61,7 +61,7 @@ void SingleAgentSolver::saveResults(const string &fileName, const string &instan
 	if (!exist)
 	{
 		ofstream addHeads(fileName);
-		addHeads << "runtime,#thread,path cost," <<
+		addHeads << "runtime,nproc,path cost," <<
 			"#node expanded,#node generated," <<
 			"heuristics time,find path time" <<
 			"expand node time,send msg time," <<

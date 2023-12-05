@@ -183,14 +183,15 @@ void HDAStar::add_local_node(AStarNode *next){
 // lowerbound is an underestimation of the length of the path in order to speed up the search.
 Path HDAStar::findSuboptimalPath()
 {
-    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
-    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+    // MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+    // MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 	MPI_Request dst_req, barrier_req;
 
     Path path;
     num_expanded = 0;
     num_generated = 0;
+    
 
     // generate start and add it to the OPEN & FOCAL list
     auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
@@ -202,11 +203,11 @@ Path HDAStar::findSuboptimalPath()
 
     auto goal_dummy = AStarNode(goal_location, 0, my_heuristic[goal_location], nullptr, 0, 0);
     int dst_pid = hash(&goal_dummy);
-    int dst_rcv, dst_flag, barrier_flag = 0;
+    int dst_flag, barrier_flag = 0;
     if (dst_pid != pid)
     {
         //in this broadcast we will wait for information about whether the destination has been found
-        MPI_Ibcast(&dst_rcv, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
+        MPI_Ibcast(&path_cost, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
     }
 
     //register mpi data type
@@ -226,6 +227,7 @@ Path HDAStar::findSuboptimalPath()
         // if (pid == 0)
         //     printf("iter start pid = %d\n", pid);
         if (!open_list.empty() && (!in_barrier_mode)){
+            Timer expand_node_timer;
             auto* curr = popNode();
             // if (iter % 20 == 0) {
             //     printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
@@ -239,11 +241,11 @@ Path HDAStar::findSuboptimalPath()
                 if (!dst_found)
                 {
                     dst_found = true;
-                    dst_rcv = curr->getFVal();
-                    // broadcast the cost of this path to all processors
-		            MPI_Ibcast(&dst_rcv, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
                     // updatePath(curr, path);
                 }
+                path_cost = curr->getFVal();
+                // broadcast the cost of this path to all processors
+                MPI_Ibcast(&path_cost, 1, MPI_INT, dst_pid, MPI_COMM_WORLD, &dst_req);
                 continue;
             }
 
@@ -255,19 +257,23 @@ Path HDAStar::findSuboptimalPath()
                 // compute cost to next_id via curr node
                 int next_g_val = curr->g_val + 1;
                 int next_h_val = my_heuristic[next_location];
-                
+                if (dst_found && next_g_val + next_h_val > path_cost)
+                    continue;
                 // generate (maybe temporary) node
                 auto next = new AStarNode(next_location, next_g_val, next_h_val,
                                         curr, next_timestep);
 
-                message_set[hash(next)].push_back(create_msg(next));
                 if (hash(next) == pid) {
                     add_local_node(next);
+                } else {
+                    message_set[hash(next)].push_back(create_msg(next));
                 }
             }
+            expand_node_time += expand_node_timer.elapsed();
             
         } else {
             // open list is empty
+            Timer barrier_timer;
             if (!dst_found)
             {
                 if(dst_pid != pid)
@@ -290,7 +296,7 @@ Path HDAStar::findSuboptimalPath()
                         if (to_send)
                         {
                             auto node = open_list.top();
-                            if (node->getFVal() > dst_rcv)
+                            if (node->getFVal() > path_cost)
                                 to_send = 0;
                         }
 
@@ -307,21 +313,30 @@ Path HDAStar::findSuboptimalPath()
                     }
                 }
             }
+            barrier_time += barrier_timer.elapsed();
         }
 
         //step 3: send messages
+        Timer send_msg_timer;
         send_message_set();
+        send_msg_time += send_msg_timer.elapsed();
 
         //step 4: receive message set
+        Timer rcv_msg_timer;
         int num_msgs = receive_message_set();
+        rcv_msg_time += rcv_msg_timer.elapsed();
 
+        Timer push_msg_timer;
         add_msgs_to_open_list(num_msgs);
+        push_msg_time += push_msg_timer.elapsed();
+
         iter ++;
     }
 
     releaseNodes();
-    planned_path = path;
-    path_cost = path.size() - 1;
+    // planned_path = path;
+    // path_cost = path.size() - 1;
+    
     return path;
 }
 

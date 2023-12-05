@@ -59,7 +59,10 @@ int main(int argc, char** argv)
 		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
 			Timer timer;
 			SpaceTimeAStar* planner = new SpaceTimeAStar(instance, i);
+			planner->heuristics_time += timer.elapsed();
+			Timer path_timer;
 			Path path = planner->findOptimalPath();
+			planner->path_finding_time = path_timer.elapsed();
 			float runtime = timer.elapsed();
 			planner->runtime = runtime; 
 			if (vm.count("output"))
@@ -83,9 +86,11 @@ int main(int argc, char** argv)
 			MPI_Init(&argc, &argv);
 			MPI_Comm_rank(MPI_COMM_WORLD, &pid);
 			MPI_Comm_size(MPI_COMM_WORLD, &nproc);
-			printf("after init nproc = %d\n", nproc);
 			HDAStar* planner = new HDAStar(instance, i, nproc, pid);
+			planner->heuristics_time += timer.elapsed();
+			Timer path_timer;
 			Path path = planner->findOptimalPath();
+			planner->path_finding_time = path_timer.elapsed();
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			if (pid == 0) { // should be the process that find goal

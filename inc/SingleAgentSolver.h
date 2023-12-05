@@ -73,7 +73,15 @@ public:
 	int getGoalLocation() const {return instance.goal_locations[trial_idx]; }
 
 	///////// statistics & results
-	float runtime;
+	float runtime = 0;
+	float heuristics_time = 0;
+	float path_finding_time = 0;
+	float send_msg_time = 0;
+	float rcv_msg_time = 0;
+	float push_msg_time = 0;
+	float barrier_time = 0;
+	float expand_node_time = 0;
+	int nproc = 1;
 	uint64_t num_expanded = 0;
 	uint64_t num_generated = 0;
 	Path planned_path;

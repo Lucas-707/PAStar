@@ -1,4 +1,7 @@
-runtime,path cost,#node expanded,#node generated,instance name,trial index
-0.196711,139,140,369,benchmark/Paris_1_256-random-1.scen,0
-0.273905,-1,4575,4575,benchmark/Paris_1_256-random-1.scen,0
-0.265765,-1,1974,1974,benchmark/Paris_1_256-random-1.scen,0
+runtime,#thread,path cost,#node expanded,#node generated,heuristics time,find path time,expand node time,send msg time,rcv msg time,push msg time,barreir time,instance name,trial index
+0.206198,1,139,140,369,0.205137,0.00106068,0,0,0,0,0,benchmark/Paris_1_256-random-1.scen,0
+0.221213,1,139,1519,1519,0.2141,0.00711243,0.00515772,0.00010685,0.000222165,0.000203745,6.227e-06,benchmark/Paris_1_256-random-1.scen,0
+0.246186,1,139,1519,1519,0.227699,0.0184828,0.00543259,0.000109951,0.000270545,0.00020933,4.781e-06,benchmark/Paris_1_256-random-1.scen,0
+0.24651,1,139,1519,1519,0.238751,0.00775295,0.00534322,9.92843e-05,0.000275907,0.000206491,8.221e-06,benchmark/Paris_1_256-random-1.scen,0
+0.248033,1,139,1519,1519,0.236933,0.0109943,0.00604884,0.000102904,0.000328593,0.000212058,8.099e-06,benchmark/Paris_1_256-random-1.scen,0
+0.249098,1,139,1519,1519,0.24035,0.00870612,0.00540098,0.000106219,0.000260793,0.000202292,7.613e-06,benchmark/Paris_1_256-random-1.scen,0

@@ -18,15 +18,14 @@ public:
 	string getName() const { return "AStar"; }
 
 	HDAStar(const Instance& instance, int agent, int nproc, int pid):
-		SingleAgentSolver(instance, agent), nproc(nproc), pid(pid)
-	{}
+		SingleAgentSolver(instance, agent)
+	{ nproc = nproc; pid = pid; }
 
 private:
 	// define typedefs and handles for heap
 	typedef pairing_heap< AStarNode*, compare<AStarNode::compare_node> > heap_open_t;
 	heap_open_t open_list;
 	int pid;
-	int nproc;
 	bool dst_found = false;
 	bool in_barrier_mode = false;
 	int tag = 0;

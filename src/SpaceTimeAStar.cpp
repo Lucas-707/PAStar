@@ -32,7 +32,7 @@ Path SpaceTimeAStar::findSuboptimalPath()
     num_generated = 0;
 
     // generate start and add it to the OPEN & FOCAL list
-    auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
+    auto start = new AStarNode(start_location, 0, compute_heuristic(start_location, goal_location), nullptr, 0, 0);
 
     pushNode(start);
     allNodes_table.insert(start);
@@ -57,7 +57,7 @@ Path SpaceTimeAStar::findSuboptimalPath()
             int next_timestep = curr->timestep + 1;
             // compute cost to next_id via curr node
             int next_g_val = curr->g_val + 1;
-            int next_h_val = my_heuristic[next_location];
+            int next_h_val = compute_heuristic(next_location, goal_location);
             
             // generate (maybe temporary) node
             auto next = new AStarNode(next_location, next_g_val, next_h_val,

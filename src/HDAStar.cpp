@@ -138,6 +138,7 @@ void HDAStar::add_msgs_to_open_list(int num_msgs){
                     open_list.increase(existing_next->open_handle);  // increase because f-val improved
             }
         }
+        delete(next);
 
     }
     message_set[pid].clear();
@@ -174,6 +175,7 @@ void HDAStar::add_local_node(AStarNode *next){
             if (update_open)
                 open_list.increase(existing_next->open_handle);  // increase because f-val improved
         }
+        delete(next);
     }
 }
 
@@ -194,14 +196,14 @@ Path HDAStar::findSuboptimalPath()
     
 
     // generate start and add it to the OPEN & FOCAL list
-    auto start = new AStarNode(start_location, 0, my_heuristic[start_location], nullptr, 0, 0);
+    auto start = new AStarNode(start_location, 0, compute_heuristic(start_location, goal_location), nullptr, 0, 0);
     if (hash(start) == pid)
     {
         pushNode(start);
         allNodes_table.insert(start);
     }
 
-    auto goal_dummy = AStarNode(goal_location, 0, my_heuristic[goal_location], nullptr, 0, 0);
+    auto goal_dummy = AStarNode(goal_location, 0, 0, nullptr, 0, 0);
     int dst_pid = hash(&goal_dummy);
     int dst_flag, barrier_flag = 0;
     if (dst_pid != pid)
@@ -224,11 +226,15 @@ Path HDAStar::findSuboptimalPath()
     while (true) {
         // Step 2: process current open list and populate message set
         // printf("open list size = %d\n", open_list.size());
-        // if (pid == 0)
-        //     printf("iter start pid = %d\n", pid);
         if (!open_list.empty() && (!in_barrier_mode)){
             Timer expand_node_timer;
+            if (dst_found && open_list.top()->getFVal() >= path_cost) {
+                while(!open_list.empty())
+                    popNode();
+                continue;
+            }
             auto* curr = popNode();
+            num_expanded++;
             // if (iter % 20 == 0) {
             //     printf("thread %d pop node location %d, gval %d\n", pid, curr->location, curr->g_val);
             //     std::cout.flush();
@@ -256,8 +262,8 @@ Path HDAStar::findSuboptimalPath()
                 int next_timestep = curr->timestep + 1;
                 // compute cost to next_id via curr node
                 int next_g_val = curr->g_val + 1;
-                int next_h_val = my_heuristic[next_location];
-                if (dst_found && next_g_val + next_h_val > path_cost)
+                int next_h_val = compute_heuristic(next_location, goal_location);
+                if (dst_found && next_g_val + next_h_val >= path_cost)
                     continue;
                 // generate (maybe temporary) node
                 auto next = new AStarNode(next_location, next_g_val, next_h_val,
@@ -336,7 +342,7 @@ Path HDAStar::findSuboptimalPath()
     releaseNodes();
     // planned_path = path;
     // path_cost = path.size() - 1;
-    
+    printf("pid=%d, num_expanded=%d, num_generated=%d\n", pid, num_expanded, num_generated);
     return path;
 }
 
@@ -346,7 +352,6 @@ inline AStarNode* HDAStar::popNode()
     open_list.pop();
     // open_list.erase(node->open_handle);
     node->in_openlist = false;
-    num_expanded++;
     return node;
 }
 

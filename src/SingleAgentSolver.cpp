@@ -63,7 +63,7 @@ void SingleAgentSolver::saveResults(const string &fileName, const string &instan
 		ofstream addHeads(fileName);
 		addHeads << "runtime,nproc,path cost," <<
 			"#node expanded,#node generated," <<
-			"heuristics time,find path time" <<
+			"heuristics time,find path time," <<
 			"expand node time,send msg time," <<
 			"rcv msg time,push msg time," <<
 			"barreir time," <<

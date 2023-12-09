@@ -59,7 +59,7 @@ public:
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
 	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
 	{
-		return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
+		return instance.getManhattanDistance(from, to);
 	}
 	const Instance& instance;
 
@@ -97,7 +97,7 @@ public:
 		goal_location(instance.goal_locations[trial]),
 		trial_idx(trial)
 	{
-		compute_heuristics();
+		// compute_heuristics();
 	}
 
     virtual ~SingleAgentSolver() =default;

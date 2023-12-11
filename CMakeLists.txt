@@ -1,6 +1,7 @@
 project(pastar)
 
 cmake_minimum_required (VERSION 2.6)
+enable_language(CUDA)
 
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE "RELEASE")
@@ -9,8 +10,11 @@ ENDIF()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 include_directories("inc")
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*")
 add_executable(pastar ${SOURCES})
+
+# Find CUDA
+find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 
 # Find Boost
 find_package(Boost REQUIRED COMPONENTS program_options system filesystem)

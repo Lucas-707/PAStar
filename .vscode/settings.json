@@ -23,6 +23,27 @@
         "new": "cpp",
         "__config": "cpp",
         "system_error": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "bitset": "cpp",
+        "initializer_list": "cpp",
+        "queue": "cpp",
+        "set": "cpp",
+        "span": "cpp",
+        "stack": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "unordered_map": "cpp",
+        "__bit_reference": "cpp",
+        "*.tcc": "cpp",
+        "__node_handle": "cpp",
+        "chrono": "cpp",
+        "functional": "cpp",
+        "sstream": "cpp",
+        "__locale": "cpp",
+        "__threading_support": "cpp",
+        "optional": "cpp",
+        "thread": "cpp"
     }
 }

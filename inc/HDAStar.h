@@ -15,7 +15,7 @@ public:
 	Path findOptimalPath();
 	Path findSuboptimalPath();  // return the path and the lowerbound
 
-	string getName() const { return "AStar"; }
+	string getName() const { return "HDAStar"; }
 
 	HDAStar(const Instance& instance, int agent, int nproc_, int pid_):
 		SingleAgentSolver(instance, agent)

@@ -310,7 +310,6 @@ Path HDAStar::findSuboptimalPath()
                         if (to_recv == 0)
                         {
                             std::cout << "Program Finished executing.. " << std::endl;
-                            // updatePath(curr, path);
                             break;
                         } else {
                             in_barrier_mode = false;

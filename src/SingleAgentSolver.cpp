@@ -63,7 +63,6 @@ void SingleAgentSolver::saveResults(const string &fileName, const string &instan
 		ofstream addHeads(fileName);
 		addHeads << "runtime,nproc,path cost," <<
 			"#node expanded,#node generated," <<
-			"heuristics time,find path time," <<
 			"expand node time,send msg time," <<
 			"rcv msg time,push msg time," <<
 			"barreir time," <<
@@ -73,7 +72,6 @@ void SingleAgentSolver::saveResults(const string &fileName, const string &instan
 	ofstream stats(fileName, std::ios::app);
 	stats << runtime << "," << nproc << "," << path_cost << "," <<
 		num_expanded << "," << num_generated << "," <<
-		heuristics_time << "," << path_finding_time << "," <<
 		expand_node_time << "," << send_msg_time << "," <<
 		rcv_msg_time << "," << push_msg_time << "," <<
 		barrier_time << "," <<

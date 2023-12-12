@@ -91,12 +91,25 @@ int main(int argc, char** argv)
 			planner->heuristics_time += timer.elapsed();
 			Timer path_timer;
 			Path path = planner->findOptimalPath();
-			planner->path_finding_time = path_timer.elapsed();
+			// planner->path_finding_time = path_timer.elapsed();
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			if (pid == 0) { // should be the process that find goal
 				float runtime = timer.elapsed();
 				planner->runtime = runtime; 
+			}
+
+			// gather the total node from all process
+			int recv_node_gen[nproc]; int recv_node_exp[nproc];
+			MPI_Gather(&planner->num_generated, 1, MPI_INT, &recv_node_gen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Gather(&planner->num_expanded, 1, MPI_INT, &recv_node_exp, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			planner->num_expanded = 0; planner->num_generated = 0;
+			for (int p=0; p<nproc; p++) {
+				planner->num_expanded += recv_node_exp[p];
+				planner->num_generated += recv_node_gen[p];
+			}
+			
+			if (pid == 0) {
 				if (vm.count("output"))
 					planner->saveResults(vm["output"].as<string>(), vm["agents"].as<string>());
 				// if (vm.count("outputPaths"))

@@ -341,7 +341,7 @@ Path HDAStar::findSuboptimalPath()
     releaseNodes();
     // planned_path = path;
     // path_cost = path.size() - 1;
-    printf("pid=%d, num_expanded=%d, num_generated=%d\n", pid, num_expanded, num_generated);
+    // printf("pid=%d, num_expanded=%d, num_generated=%d\n", pid, num_expanded, num_generated);
     return path;
 }
 

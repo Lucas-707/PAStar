@@ -3,20 +3,27 @@
 
 #include "GAStar.h"
 
+struct heap {
+	AStarNode **nodes;
+	int size;
+};
 
-heap_open_t **heaps_create(int k);
 
-heap_open_t *heap_create(int capacity);
+heap **heaps_create(int k);
 
-void heaps_destroy(heap_open_t **Q_dev, int k);
+heap *heap_create(int capacity);
 
-void heap_destroy(heap_open_t *heap_dev);
+void heaps_destroy(heap **Q_dev, int k);
 
-__device__ AStarNode *heap_extract(heap_open_t *heap);
+void heap_destroy(heap *heap_dev);
 
-__device__ bool heaps_empty(heap_open_t **heaps, int k);
+__device__ void heap_insert(heap *heap, AStarNode *node);
 
-__device__ int heaps_min(heap_open_t **heaps, int k);
+__device__ AStarNode *heap_extract(heap *heap);
+
+__device__ bool heaps_empty(heap **heaps, int k);
+
+__device__ int heaps_min(heap **heaps, int k);
 
 
 #endif //HEAP_H

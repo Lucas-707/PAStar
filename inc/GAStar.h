@@ -11,14 +11,6 @@
 #define BLOCKS 16
 #define RESULT_LEN (1024 * 1024)
 
-struct llist {
-	int length;
-	int capacity;
-	AStarNode **arr;
-};
-
-// define typedefs and handles for heap
-typedef pairing_heap< AStarNode*, compare<AStarNode::compare_node> > heap_open_t;
 
 class GAStar: public SingleAgentSolver
 {
@@ -38,8 +30,6 @@ public:
 private:
 	// define typedef for hash_map
 	// typedef unordered_set<AStarNode*, AStarNode::NodeHasher, AStarNode::eqnode> hashtable_t;
-	AStarNode** allNodes_table;
-	heap_open_t **open_list;
 
 	// Updates the path datamember
 	void updatePath(const LLNode* goal, vector<PathEntry> &path);

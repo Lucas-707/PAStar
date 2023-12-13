@@ -5,7 +5,7 @@
 __global__ void clear_open_list(llist *S);
 __global__ void fill_open_list(int k);
 __global__ void deduplicate(llist *T);
-__global__ void push_to_queues(int k, heap_open_t **open_list, llist *S, int off);
+__global__ void push_to_queues(int k, heap **open_list, llist *S, int off);
 
 __device__ unsigned int jenkins_hash(int j, AStarNode *node);
 __device__ int calculate_index();
@@ -68,8 +68,7 @@ Path GAStar::findSuboptimalPath()
 	cudaMalloc(&allNodes_table, HASH_SIZE * sizeof(AStarNode*));
 	cudaMemset(allNodes_table, 0, HASH_SIZE * sizeof(AStarNode*));
 	// priority queues of open lists (Q)
-	heap_open_t **open_list = heaps_create(k);
-	llist **Ss = lists_create(BLOCKS, 1000000);
+	heap **open_list = heaps_create(k);
 	llist *S = list_create(1024 * 1024);
 	int total_open_list_size_cpu;
 	int found_cpu;
@@ -98,7 +97,6 @@ Path GAStar::findSuboptimalPath()
 	} while (total_open_list_size_cpu > 0);
 
 
-	// lists_destroy(Ss, BLOCKS);
 	// heaps_destroy(open_list, k);
 	// HANDLE_RESULT(cudaFree(allNodes_table));
 	cudaDeviceSynchronize();
@@ -116,7 +114,7 @@ Path GAStar::findSuboptimalPath()
 
 }
 
-void GAStar::expandNode(AStarNode *next, heap_open_t *open_list, llist S){
+void GAStar::expandNode(AStarNode *next, heap *open_list, llist S){
 	auto next_locations = instance.getNeighbors(curr->location);
 	next_locations.emplace_back(curr->location);
 	for (int next_location : next_locations)
@@ -136,7 +134,7 @@ void GAStar::expandNode(AStarNode *next, heap_open_t *open_list, llist S){
 }
 
 
-inline AStarNode* GAStar::popNode(heap_open_t *open_list)
+inline AStarNode* GAStar::popNode(heap *open_list)
 {
     auto node = open_list.top(); open_list.pop();
     // open_list.erase(node->open_handle);
@@ -146,7 +144,7 @@ inline AStarNode* GAStar::popNode(heap_open_t *open_list)
 }
 
 
-inline void GAStar::pushNode(heap_open_t *open_list, AStarNode* node)
+inline void GAStar::pushNode(heap *open_list, AStarNode* node)
 {
     node->open_handle = open_list.push(node);
     node->in_openlist = true;
@@ -166,69 +164,73 @@ __global__ void clear_open_list(llist *S) {
 	list_clear(S);
 }
 
-__global__ void fill_open_list(int k) {
+__global__ void fill_open_list(int k, Instance* inst) {
 	auto *bestNode = NULL;
 	int index = calculate_index();
 	if (index == 0) steps++;
 
-	for (int i = index; i < k; i += blockDim.x * gridDim.x) {
-		if (open_list[i].empty()) continue;
-		auto* curr = popNode(open_list[i]);
+	if (!open_list[index].empty()){
+		auto* curr = popNode(open_list[index]);
 		atomicSub(&total_open_list_size, 1);
 		if (curr->location == goal_location) {
-			if (bestNode == NULL || curr->getFVal() < bestNode->getFVal()) {
-                // Found a better possible path starting with curr node
+			if (bestNode == NULL || (curr->g_val + curr->h_val) < (bestNode->g_val + bestNode->h_val)) {
 				bestNode = copy(*curr);
-			}
-			// If already at goal location, no need to expand
-			continue;
-		}
-		// Expand S
-		expandNode(curr, open_list[i]);
-	}
-	if (bestNode != NULL && bestNode->getFVal() <= heaps_min(open_list, k)) {
-        // Found a better path, update found and return the path
-		int found_before = atomicCAS(&found, 0, 1);
-		if (found_before == 1) return;
-		updatePath(bestNode, path);
-	}
-}
-
-__global__ void deduplicate(llist *T) {
-	int id = calculate_index();
-	for (int i = id; i < T->length; i += blockDim.x * gridDim.x) {
-		int z = 0;
-		AStarNode *t1 = list_get(T, i);
-		for (int j = 0; j < HASH_FUNS; j++) {
-			assert(t1 != NULL);
-			auto el = allNodes_table[jenkins_hash(j, t1) % HASH_SIZE];
-			if (el == NULL || cuda_str_eq(t1, el)) {
-				z = j;
-				break;
-			}
-		}
-		int index = jenkins_hash(z, t1) % HASH_SIZE;
-		t1 = (AStarNode*)atomicExch((unsigned long long*)&(allNodes_table[jenkins_hash(z, t1) % HASH_SIZE]), (unsigned long long)t1);
-		if (t1 != NULL && t1 == list_get(T, i) &&
-				(list_get(T, i), t, h)->getFVal() >= t1->getFVal()) {
-			list_remove(T, i);
-			continue;
-		}
-		t1 = list_get(T, i);
-		for (int j = 0; j < HASH_FUNS; j++) {
-			if (j != z) {
-				auto el = allNodes_table[jenkins_hash(j, t1) % HASH_SIZE];
-				if (el != NULL && el == t1 &&
-						(list_get(T, i), t, h)->getFVal() >= el->getFVal()) {
-					list_remove(T, i);
-					break;
+				if (bestNode != NULL && (bestNode->g_val + bestNode->h_val) <= heaps_min(open_list, k)) {
+					// Found a better path, update found and return the path
+					int found_before = atomicCAS(&found, 0, 1);
+					if (found_before == 1) return;
+					updatePath(bestNode, path);
+					return;
 				}
 			}
 		}
 	}
+	
+	// Expand S
+	int* neighbors = malloc(4 * sizeof(int));
+	int* n_size;
+	getNeighbors(curr, neighbors, n_size, inst);
+	for (int j = 0; j<n_size; j++) {
+		int delta = states_delta(q->node, my_expand_buf[j]);
+		state *new_state = state_create(my_expand_buf[j], -1, q->g + delta, q, states_pool, nodes_pool, state_len);
+		if (new_state == NULL) return;
+		list_insert(S, new_state);
+	}
+	
 }
 
-__global__ void push_to_queues(int k, heap_open_t **open_list, llist *S, int off) {
+__global__ void deduplicate(llist *T) {
+	int index = calculate_index();
+	int z = 0;
+	AStarNode *t1 = list_get(T, index);
+	for (int j = 0; j < HASH_FUNS; j++) {
+		assert(t1 != NULL);
+		auto el = allNodes_table[jenkins_hash(j, t1) % HASH_SIZE];
+		if (el == NULL || cuda_str_eq(t1, el)) {
+			z = j;
+			break;
+		}
+	}
+	t1 = (AStarNode*)atomicExch((unsigned long long*)&(allNodes_table[jenkins_hash(z, t1) % HASH_SIZE]), (unsigned long long)t1);
+	if (t1 != NULL && t1 == list_get(T, index) &&
+			((list_get(T, index)->g_val + list_get(T, index)->h_val) >= (t1->g_val + t1->h_val))) {
+		list_remove(T, index);
+		continue;
+	}
+	t1 = list_get(T, index);
+	for (int j = 0; j < HASH_FUNS; j++) {
+		if (j != z) {
+			auto el = allNodes_table[jenkins_hash(j, t1) % HASH_SIZE];
+			if (el != NULL && el == t1 &&
+					((list_get(T, index)->g_val + list_get(T, index)->h_val) >= (el->g_val + el->h_val))) {
+				list_remove(T, index);
+				break;
+			}
+		}
+	}
+}
+
+__global__ void push_to_queues(int k, heap **open_list, llist *S, int off) {
 	for (int i = threadIdx.x; i < S->length; i += blockDim.x) {
 		AStarNode *t1 = list_get(S, i);
 		if (t1 != NULL) {
@@ -240,3 +242,17 @@ __global__ void push_to_queues(int k, heap_open_t **open_list, llist *S, int off
 		__syncthreads();
 	}
 }
+
+__device__ getNeighbors(int curr, int* neighbors, int* n_size, Instance* inst) {
+	int candidates[4] = {curr + 1, curr - 1, curr + inst->num_of_cols, curr - inst->num_of_cols};
+	*n_size = 0;
+	for (int i=0; i<4; i++)
+	{
+		int next = candidates[i];
+		if (next >= 0 && next < inst->map_size && (!inst->my_map[next])) {
+			neighbors[count] = next;
+			*n_size ++;
+		}
+	}
+	return;
+} 

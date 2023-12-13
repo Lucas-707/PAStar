@@ -3,7 +3,11 @@
 
 #include "GAStar.h"
 
-llist **lists_create(int lists, int capacity);
+struct llist {
+	int length;
+	int capacity;
+	AStarNode **arr;
+};
 
 llist *list_create(int capacity);
 
@@ -13,7 +17,7 @@ void list_destroy(llist *list);
 
 __device__ void list_clear(llist *list);
 
-__device__ void list_insert(llist *list, AStarNode *state);
+__device__ void list_insert(llist *list, AStarNode *node);
 
 __device__ void list_remove(llist *list, int index);
 

@@ -7,7 +7,7 @@ __global__ void fill_open_list(int k);
 __global__ void deduplicate(llist *T);
 __global__ void push_to_queues(int k, heap **open_list, llist *S, int off);
 
-__device__ unsigned int jenkins_hash(int j, AStarNode *node);
+__device__ unsigned int jenkins_hash(int j, GNode *node);
 __device__ int calculate_index();
 
 __device__ int calculate_index() {
@@ -38,7 +38,18 @@ Path GAStar::findOptimalPath()
     return findSuboptimalPath();
 }
 
-__device__ unsigned int jenkins_hash(int j, AStarNode *node) {
+__global__ GNode* init_GNode(int loc, int g_val, int h_val, GNode* parent, int timestep, bool in_openlist = false)
+{
+	GNode* n = malloc(sizeof(GNode));
+	n->location = loc;
+	n->g_val = g_val;
+	n->h_val = h_val;
+	n->parent = parent;
+	n->timestep = timestep;
+	n->in_openlist = in_openlist;
+}
+
+__device__ unsigned int jenkins_hash(int j, GNode *node) {
 	char c;
 	unsigned long hash = (j * 10000007);
 	while (c = node->location++) {
@@ -65,8 +76,8 @@ Path GAStar::findSuboptimalPath()
 	int k = THREADS_PER_BLOCK * BLOCKS;
 
 
-	cudaMalloc(&allNodes_table, HASH_SIZE * sizeof(AStarNode*));
-	cudaMemset(allNodes_table, 0, HASH_SIZE * sizeof(AStarNode*));
+	cudaMalloc(&allNodes_table, HASH_SIZE * sizeof(GNode*));
+	cudaMemset(allNodes_table, 0, HASH_SIZE * sizeof(GNode*));
 	// priority queues of open lists (Q)
 	heap **open_list = heaps_create(k);
 	llist *S = list_create(1024 * 1024);
@@ -74,7 +85,8 @@ Path GAStar::findSuboptimalPath()
 	int found_cpu;
 	int out_of_memory_cpu;
 
-	auto start = new AStarNode(start_location, 0, compute_heuristic(start_location, goal_location), nullptr, 0, 0);
+	GNode* start = init_GNode(start_location, 0, compute_heuristic(start_location, goal_location), nullptr, 0, 0);
+
 	pushNode(open_list[0], start)
 	atomicAdd(&total_open_list_size, 1);
 	int step = 0;
@@ -101,8 +113,6 @@ Path GAStar::findSuboptimalPath()
 	// HANDLE_RESULT(cudaFree(allNodes_table));
 	cudaDeviceSynchronize();
 
-    // // generate start and add it to the OPEN & FOCAL list
-    // auto start = new AStarNode(start_location, 0, compute_heuristic(start_location, goal_location), nullptr, 0, 0);
 
     // pushNode(start);
     // allNodes_table.insert(start);
@@ -114,7 +124,7 @@ Path GAStar::findSuboptimalPath()
 
 }
 
-void GAStar::expandNode(AStarNode *next, heap *open_list, llist S){
+void GAStar::expandNode(GNode *next, heap *open_list, llist S){
 	auto next_locations = instance.getNeighbors(curr->location);
 	next_locations.emplace_back(curr->location);
 	for (int next_location : next_locations)
@@ -125,7 +135,7 @@ void GAStar::expandNode(AStarNode *next, heap *open_list, llist S){
 		int next_h_val = compute_heuristic(next_location, goal_location);
 		
 		// generate (maybe temporary) node
-		auto next = new AStarNode(next_location, next_g_val, next_h_val,
+		GNode* next = init_GNode(next_location, next_g_val, next_h_val,
 									curr, next_timestep);
 
 		list_insert(S, next);
@@ -134,7 +144,7 @@ void GAStar::expandNode(AStarNode *next, heap *open_list, llist S){
 }
 
 
-inline AStarNode* GAStar::popNode(heap *open_list)
+inline GNode* GAStar::popNode(heap *open_list)
 {
     auto node = open_list.top(); open_list.pop();
     // open_list.erase(node->open_handle);
@@ -144,7 +154,7 @@ inline AStarNode* GAStar::popNode(heap *open_list)
 }
 
 
-inline void GAStar::pushNode(heap *open_list, AStarNode* node)
+inline void GAStar::pushNode(heap *open_list, GNode* node)
 {
     node->open_handle = open_list.push(node);
     node->in_openlist = true;
@@ -191,10 +201,12 @@ __global__ void fill_open_list(int k, Instance* inst) {
 	int* n_size;
 	getNeighbors(curr, neighbors, n_size, inst);
 	for (int j = 0; j<n_size; j++) {
-		int delta = states_delta(q->node, my_expand_buf[j]);
-		state *new_state = state_create(my_expand_buf[j], -1, q->g + delta, q, states_pool, nodes_pool, state_len);
-		if (new_state == NULL) return;
-		list_insert(S, new_state);
+		int next_location = neighbors[j];
+		int next_timestep = curr->timestep + 1;
+		int next_g_val = curr->g_val + 1;
+		int next_h_val = compute_heuristic(next_location, goal_location);
+		GNode *next = init_GNode(next_location, next_g_val, next_h_val, curr, next_timestep);
+		list_insert(S, next);
 	}
 	
 }
@@ -202,7 +214,7 @@ __global__ void fill_open_list(int k, Instance* inst) {
 __global__ void deduplicate(llist *T) {
 	int index = calculate_index();
 	int z = 0;
-	AStarNode *t1 = list_get(T, index);
+	GNode *t1 = list_get(T, index);
 	for (int j = 0; j < HASH_FUNS; j++) {
 		assert(t1 != NULL);
 		auto el = allNodes_table[jenkins_hash(j, t1) % HASH_SIZE];
@@ -211,7 +223,7 @@ __global__ void deduplicate(llist *T) {
 			break;
 		}
 	}
-	t1 = (AStarNode*)atomicExch((unsigned long long*)&(allNodes_table[jenkins_hash(z, t1) % HASH_SIZE]), (unsigned long long)t1);
+	t1 = (GNode*)atomicExch((unsigned long long*)&(allNodes_table[jenkins_hash(z, t1) % HASH_SIZE]), (unsigned long long)t1);
 	if (t1 != NULL && t1 == list_get(T, index) &&
 			((list_get(T, index)->g_val + list_get(T, index)->h_val) >= (t1->g_val + t1->h_val))) {
 		list_remove(T, index);
@@ -232,7 +244,7 @@ __global__ void deduplicate(llist *T) {
 
 __global__ void push_to_queues(int k, heap **open_list, llist *S, int off) {
 	for (int i = threadIdx.x; i < S->length; i += blockDim.x) {
-		AStarNode *t1 = list_get(S, i);
+		GNode *t1 = list_get(S, i);
 		if (t1 != NULL) {
 			pushNode(open_list[(i + off) % k], t1);
 			open_list.increase(t1->open_handle); 

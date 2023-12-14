@@ -309,7 +309,7 @@ Path HDAStar::findSuboptimalPath()
                         MPI_Allreduce(&to_send, &to_recv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
                         if (to_recv == 0)
                         {
-                            std::cout << "Program Finished executing.. " << std::endl;
+                            // std::cout << "Program Finished executing.. " << std::endl;
                             break;
                         } else {
                             in_barrier_mode = false;
@@ -329,6 +329,7 @@ Path HDAStar::findSuboptimalPath()
         //step 4: receive message set
         Timer rcv_msg_timer;
         int num_msgs = receive_message_set();
+        num_received += num_msgs;
         rcv_msg_time += rcv_msg_timer.elapsed();
 
         Timer push_msg_timer;

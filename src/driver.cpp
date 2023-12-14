@@ -59,10 +59,10 @@ int main(int argc, char** argv)
 		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
 			Timer timer;
 			SpaceTimeAStar* planner = new SpaceTimeAStar(instance, i);
-			planner->heuristics_time += timer.elapsed();
-			Timer path_timer;
+			// planner->heuristics_time += timer.elapsed();
+			// Timer path_timer;
 			Path path = planner->findOptimalPath();
-			planner->path_finding_time = path_timer.elapsed();
+			// planner->path_finding_time = path_timer.elapsed();
 			float runtime = timer.elapsed();
 			planner->runtime = runtime; 
 			if (vm.count("output"))
@@ -88,8 +88,8 @@ int main(int argc, char** argv)
 
 			Timer timer;
 			HDAStar* planner = new HDAStar(instance, i, nproc, pid);
-			planner->heuristics_time += timer.elapsed();
-			Timer path_timer;
+			// planner->heuristics_time += timer.elapsed();
+			// Timer path_timer;
 			Path path = planner->findOptimalPath();
 			// planner->path_finding_time = path_timer.elapsed();
 			MPI_Barrier(MPI_COMM_WORLD);

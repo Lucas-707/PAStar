@@ -84,6 +84,7 @@ public:
 	int nproc = 1;
 	uint64_t num_expanded = 0;
 	uint64_t num_generated = 0;
+	uint64_t num_received = 0;
 	Path planned_path;
 	int path_cost;
 

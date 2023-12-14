@@ -1,5 +1,0 @@
-runtime,nproc,path cost,#node expanded,#node generated,heuristics time,find path time,expand node time,send msg time,rcv msg time,push msg time,barreir time,instance name,trial index
-1.35206,1,6267,191555,191718,2.358e-06,1.35206,0,0,0,0,0,benchmark/maze512-4-6.map.scen,0
-1.50913,1,6267,191555,191718,0.00297838,0,1.17531,0.0133854,0.0307191,0.0254476,0.00035129,benchmark/maze512-4-6.map.scen,0
-1.08261,2,6267,205741,205757,0.00365175,0,0.587084,0.0845379,0.070388,0.164989,0.0123285,benchmark/maze512-4-6.map.scen,0
-0.640649,4,6267,212073,212073,0.00344539,0,0.256705,0.0880797,0.0698463,0.0925566,0.0187837,benchmark/maze512-4-6.map.scen,0

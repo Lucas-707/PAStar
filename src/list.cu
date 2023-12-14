@@ -36,7 +36,7 @@ __device__ void list_clear(llist *list) {
 	list->length = 0;
 }
 
-__device__ void list_insert(llist *list, AStartNode *node) {
+__device__ void list_insert(llist *list, GNode *node) {
 	int index = atomicAdd(&(list->length), 1);
 	assert(index < llist->capacity);
 	list->arr[index] = node;

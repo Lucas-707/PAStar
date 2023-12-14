@@ -13,12 +13,13 @@
 
 struct GNode
 {
-	int loc;
+	int location;
 	int g_val;
 	int h_val;
 	GNode* parent;
 	int timestep;
 	bool in_openlist = false;
+	bool is_goal = false;
 
 };
 
@@ -46,7 +47,6 @@ private:
 	// void updatePath(const LLNode* goal, vector<PathEntry> &path);
 	// inline AStarNode* popNode();
 	// inline void pushNode(AStarNode* node);
-	void releaseNodes();
 };
 
 #endif

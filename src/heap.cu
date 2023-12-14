@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-__device__ static void swap(AStarNode **s1, AStarNode **s2);
+__device__ static void swap(GNode **s1, GNode **s2);
 
 heap **heaps_create(int k) {
 	heap **Q_cpu = (heap**)malloc(k * sizeof(heap*));
@@ -21,8 +21,8 @@ heap *heap_create(int capacity) {
 	heap heap_cpu;
 	heap *heap_dev;
 	heap_cpu.size = 0;
-	cudaMalloc(&(heap_cpu.nodes), (capacity + 1) * sizeof(AStarNode*));
-	cudaMemset(heap_cpu.nodes, 0, (capacity + 1) * sizeof(AStarNode*));
+	cudaMalloc(&(heap_cpu.nodes), (capacity + 1) * sizeof(GNode*));
+	cudaMemset(heap_cpu.nodes, 0, (capacity + 1) * sizeof(GNode*));
 
 	cudaMalloc(&heap_dev, sizeof(heap));
 	cudaMemcpy(heap_dev, &heap_cpu, sizeof(heap), cudaMemcpyDefault);
@@ -46,7 +46,7 @@ void heap_destroy(heap *heap_dev) {
 	cudaFree(heap_dev);
 }
 
-__device__ void heap_insert(heap *heap, AStarNode *node) {
+__device__ void heap_insert(heap *heap, GNode *node) {
 	heap->size++;
 	heap->nodes[heap->size] = node;
 	int current = heap->size;
@@ -56,8 +56,8 @@ __device__ void heap_insert(heap *heap, AStarNode *node) {
 	}
 }
 
-__device__ AStarNode *heap_extract(heap *heap) {
-	AStarNode *res = heap->nodes[1];
+__device__ GNode *heap_extract(heap *heap) {
+	GNode *res = heap->nodes[1];
 	heap->nodes[1] = heap->nodes[heap->size];
 	heap->nodes[heap->size] = NULL;
 	heap->size--;
@@ -91,7 +91,7 @@ __device__ bool heaps_empty(heap **heaps, int k) {
 __device__ int heaps_min(heap **heaps, int k) {
 	int best_f = INT_MAX;
 	for (int i = 0; i < k; i++) {
-		AStarNode *current_best = heaps[i]->nodes[1];
+		GNode *current_best = heaps[i]->nodes[1];
 		if (current_best != NULL && (current_best->g_val + current_best->h_val) < best_f) {
 			best_f = (current_best->g_val + current_best->h_val);
 		}
@@ -100,8 +100,8 @@ __device__ int heaps_min(heap **heaps, int k) {
 }
 
 
-__device__ static void swap(AStarNode **s1,  AStarNode **s2) {
-	AStarNode *tmp = *s1;
+__device__ static void swap(GNode **s1,  GNode **s2) {
+	GNode *tmp = *s1;
 	*s1 = *s2;
 	*s2 = tmp;
 }

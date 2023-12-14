@@ -17,10 +17,10 @@ void list_destroy(llist *list);
 
 __device__ void list_clear(llist *list);
 
-__device__ void list_insert(llist *list, AStarNode *node);
+__device__ void list_insert(llist *list, GNode *node);
 
 __device__ void list_remove(llist *list, int index);
 
-__device__ AStarNode *list_get(llist *list, int index);
+__device__ GNode *list_get(llist *list, int index);
 
 #endif

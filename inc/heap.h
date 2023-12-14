@@ -4,7 +4,7 @@
 #include "GAStar.h"
 
 struct heap {
-	AStarNode **nodes;
+	GNode **nodes;
 	int size;
 };
 
@@ -17,9 +17,9 @@ void heaps_destroy(heap **Q_dev, int k);
 
 void heap_destroy(heap *heap_dev);
 
-__device__ void heap_insert(heap *heap, AStarNode *node);
+__device__ void heap_insert(heap *heap, GNode *node);
 
-__device__ AStarNode *heap_extract(heap *heap);
+__device__ GNode *heap_extract(heap *heap);
 
 __device__ bool heaps_empty(heap **heaps, int k);
 

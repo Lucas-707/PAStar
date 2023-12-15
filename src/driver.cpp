@@ -57,9 +57,10 @@ int main(int argc, char** argv)
     // initialize the solver
 	if (vm["algo"].as<string>() == "A*")
 	{
-		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+		// for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+			int trial_idx = vm["trialNum"].as<int>()-1;
 			Timer timer;
-			SpaceTimeAStar* planner = new SpaceTimeAStar(instance, i);
+			SpaceTimeAStar* planner = new SpaceTimeAStar(instance, trial_idx);
 			// planner->heuristics_time += timer.elapsed();
 			// Timer path_timer;
 			Path path = planner->findOptimalPath();
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
 			if (vm.count("outputPaths"))
 				planner->savePaths(vm["outputPaths"].as<string>());
 			delete planner;
-		}
+		// }
 	}
 	else if (vm["algo"].as<string>() == "HDA*")
 	{	
@@ -84,11 +85,12 @@ int main(int argc, char** argv)
 		MPI_Init(&argc, &argv);
 		MPI_Comm_rank(MPI_COMM_WORLD, &pid);
 		MPI_Comm_size(MPI_COMM_WORLD, &nproc);
-		for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+		// for (int i=0; i < vm["trialNum"].as<int>(); i++) {
+			int trial_idx = vm["trialNum"].as<int>() - 1;
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			Timer timer;
-			HDAStar* planner = new HDAStar(instance, i, nproc, pid);
+			HDAStar* planner = new HDAStar(instance, trial_idx, nproc, pid);
 			// planner->heuristics_time += timer.elapsed();
 			// Timer path_timer;
 			Path path = planner->findOptimalPath();
@@ -117,8 +119,7 @@ int main(int argc, char** argv)
 				// 	planner->savePaths(vm["outputPaths"].as<string>());
 			}
 			delete planner;
-			
-		}
+		// }
 		MPI_Finalize();
 	}
 

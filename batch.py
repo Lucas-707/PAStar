@@ -6,10 +6,12 @@ import subprocess # For executing c++ executable
 import numpy as np
 import argparse
 
-csv_path = "./results/hda_rst.csv"
+csv_dir = "./results/newtrial/"
 benchmark_dir = "./benchmark"
 nproc_list = [1, 2, 4, 8, 16, 32, 64, 128]
 trial_num = 10
+enlarge_factor = 2
+
 
 map_list = []
 for file in os.listdir(benchmark_dir):
@@ -19,24 +21,27 @@ for file in os.listdir(benchmark_dir):
 map_list = sorted(map_list)
 
 map_list = [
-    # "maze512-1-9.map",
-    # "maze512-4-6.map",
-    # "maze512-8-4.map",
-    # "maze512-32-9.map",
-    # "Paris_1_256.map",
-    # "Paris_1_512.map",
-    # "Paris_1_1024.map",
-    # "random512-40-5.map",
-    # "den201d.map",
-    # "den312d.map",
-    # "den602d.map",
-    # "orz900d.map",
-    # "64room_005.map",
+    "maze512-1-9.map",
+    "maze512-4-6.map",
+    "maze512-8-4.map",
+    "maze512-32-9.map",
+    "Paris_1_256.map",
+    "Paris_1_512.map",
+    "Paris_1_1024.map",
+    "Boston_0_256.map",
+    "Boston_0_512.map",
+    "Boston_0_1024.map",
+    "random512-40-5.map",
+    "den201d.map",
+    "den312d.map",
+    "den602d.map",
+    "orz900d.map",
+    "64room_005.map",
 ]
 
 
 for map in map_list:
-    csv_path = f"./results/{map[:-4]}.csv"
+    csv_path = csv_dir + f"{map[:-4]}.csv"
     print(f"start running experiments on {map}")
     map = "./benchmark/" + map
     scen = map + ".scen"
@@ -46,18 +51,24 @@ for map in map_list:
     command += f" --map={map}"
     command += f" --agents={scen}"
     command += f" --output={csv_path}"
-    command += f" --trialNum={trial_num}"
-    seq_command = command + " --algo=A*"
-    hda_command = command + " --algo=HDA*"
+    command += f" --enlarge={enlarge_factor}"
+    # seq_command = command + " --algo=A*"
+    # hda_command = command + " --algo=HDA*"
 
     #run sequential
-    subprocess.run(seq_command.split(" "), check=True) # True if want failure error
+    print(f"run sequential on {map}")
+    for trial_idx in range(1, trial_num+1):
+        seq_command = command + f" --algo=A* --trialNum={trial_idx}"
+        # print(seq_command)
+        subprocess.run(seq_command.split(" "), check=True) # True if want failure error
 
     #run HDA*
     for np in nproc_list:
-        mpi_command = f"mpirun -np {np} " + hda_command
-        print("mpi command: \n",mpi_command)
-        subprocess.run(mpi_command.split(" "), check=True)
+        print(f"run HDA* with {np} process on {map}")
+        for trial_idx in range(1, trial_num+1):
+            hda_command = command + f" --algo=HDA* --trialNum={trial_idx}"
+            mpi_command = f"mpirun -np {np} " + hda_command
+            subprocess.run(mpi_command.split(" "), check=True)
 
     print(f"finished running experiments on {map}")
 
@@ -65,5 +76,6 @@ for map in map_list:
 mpirun -np 128 ./build_release/pastar --seed=0 --map=./benchmark/Paris_1_256.map --agents=./benchmark/Paris_1_256.map.scen --output=./results/Paris_1_256.csv --trialNum=10 --algo=HDA*
 mpirun -np 16 ./build_release/pastar --seed=0 --map=./benchmark/den201d.map --agents=./benchmark/den201d.map.scen --output=./results/den201d.csv --trialNum=10 --algo=HDA*
 
-mpirun -np 32 ./build_release/pastar --seed=0 --map=./benchmark/orz900d.map --agents=./benchmark/orz900d.map.scen --output=./results/orz900d.csv --trialNum=10 --algo=HDA*
+mpirun -np 4 ./build_release/pastar --seed=0 --map=./benchmark/orz900d.map --agents=./benchmark/orz900d.map.scen --output=./results/enlarge2/orz900d.csv --trialNum=1 --enlarge=2 --algo=HDA*
+
 '''

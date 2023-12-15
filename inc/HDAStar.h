@@ -3,7 +3,7 @@
 #include "SpaceTimeAStar.h"
 #include "mpi.h"
 
-#define MAX_RECV_BUFF_SIZE 100000
+#define MAX_RECV_BUFF_SIZE 200000
 
 class HDAStar: public SingleAgentSolver
 {

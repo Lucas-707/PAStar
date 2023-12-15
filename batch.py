@@ -11,6 +11,7 @@ benchmark_dir = "./benchmark"
 nproc_list = [1, 2, 4, 8, 16, 32, 64, 128]
 trial_num = 10
 enlarge_factor = 2
+hash_func = "grid"
 
 
 map_list = []
@@ -52,6 +53,7 @@ for map in map_list:
     command += f" --agents={scen}"
     command += f" --output={csv_path}"
     command += f" --enlarge={enlarge_factor}"
+    command += f" --hash={hash_func}"
     # seq_command = command + " --algo=A*"
     # hda_command = command + " --algo=HDA*"
 
@@ -67,13 +69,13 @@ for map in map_list:
         print(f"run HDA* with {np} process on {map}")
         for trial_idx in range(1, trial_num+1):
             hda_command = command + f" --algo=HDA* --trialNum={trial_idx}"
-            mpi_command = f"mpirun -np {np} " + hda_command
+            mpi_command = f"mpirun -np {np} UCX_LOG_LEVEL=error " + hda_command
             subprocess.run(mpi_command.split(" "), check=True)
 
     print(f"finished running experiments on {map}")
 
 '''
-mpirun -np 128 ./build_release/pastar --seed=0 --map=./benchmark/Paris_1_256.map --agents=./benchmark/Paris_1_256.map.scen --output=./results/Paris_1_256.csv --trialNum=10 --algo=HDA*
+mpirun -np 4 -UCX_LOG_LEVEL=error ./build_release/pastar --seed=0 --map=./benchmark/Paris_1_256.map --agents=./benchmark/Paris_1_256.map.scen --output=./results/Paris_1_256.csv --trialNum=10 --algo=HDA*
 mpirun -np 16 ./build_release/pastar --seed=0 --map=./benchmark/den201d.map --agents=./benchmark/den201d.map.scen --output=./results/den201d.csv --trialNum=10 --algo=HDA*
 
 mpirun -np 4 ./build_release/pastar --seed=0 --map=./benchmark/orz900d.map --agents=./benchmark/orz900d.map.scen --output=./results/enlarge2/orz900d.csv --trialNum=1 --enlarge=2 --algo=HDA*

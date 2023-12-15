@@ -35,6 +35,7 @@ int main(int argc, char** argv)
 		("screen,s", po::value<int>()->default_value(1), "screen option (0: none; 1: results; 2:all)")
 		("debugwait", po::value<int>()->default_value(0), "wait for 5 secs for vscode debugger")
 		("enlarge", po::value<int>()->default_value(1), "enlarge the map by this factor")
+		("hash", po::value<string>()->default_value("mod"), "hash function for HDA* (mod, random, grid)")
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -87,10 +88,11 @@ int main(int argc, char** argv)
 		MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 		// for (int i=0; i < vm["trialNum"].as<int>(); i++) {
 			int trial_idx = vm["trialNum"].as<int>() - 1;
+			string hash_func = vm["hash"].as<string>();
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			Timer timer;
-			HDAStar* planner = new HDAStar(instance, trial_idx, nproc, pid);
+			HDAStar* planner = new HDAStar(instance, trial_idx, nproc, pid, hash_func);
 			// planner->heuristics_time += timer.elapsed();
 			// Timer path_timer;
 			Path path = planner->findOptimalPath();

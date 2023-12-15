@@ -23,8 +23,8 @@ Path HDAStar::findOptimalPath()
 
 int HDAStar::hash(const LLNode* node)
 {
-    // need to update the hash function
-    return node->location % nproc;
+    // return node->location % nproc;
+    return hash_table[node->location];
 }
 
 

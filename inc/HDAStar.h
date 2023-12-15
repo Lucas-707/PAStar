@@ -17,11 +17,35 @@ public:
 
 	string getName() const { return "HDAStar"; }
 
-	HDAStar(const Instance& instance, int agent, int nproc_, int pid_):
+	HDAStar(const Instance& instance, int agent, int nproc_, int pid_, string hash_func):
 		SingleAgentSolver(instance, agent)
 	{ 
 		nproc = nproc_; 
 		pid = pid_; 
+		hash_f = hash_func;
+		hash_table.resize(instance.map_size);
+		if (hash_f == "mod") {
+			for (int loc=0; loc< hash_table.size(); loc++) {
+				hash_table[loc] = loc % nproc;
+			}
+		} else if (hash_f == "random") {
+			for (int loc=0; loc< hash_table.size(); loc++) {
+				hash_table[loc] = rand() % nproc;
+			}
+		} else if (hash_f == "grid") {
+			for (int i=0; i< instance.num_of_rows / 8; i++) {
+				for (int j=0; j< instance.num_of_cols / 8; j++) {
+					int randint = rand() % nproc;
+					for (int ii=0; ii< 8; ii++) {
+						for (int jj=0; jj< 8; jj++) {
+							hash_table[instance.linearizeCoordinate(i*8+ii,j*8+jj)] = randint;
+						}
+					}
+				}
+			}
+		}
+		// printf("finish init hash table, size=%d\n", hash_table.size());
+		
 	}
 
 private:
@@ -33,6 +57,8 @@ private:
 	bool in_barrier_mode = false;
 	int tag = 0;
     int num_sends = 0;
+	string hash_f;
+	vector<int> hash_table;
 
 	MPI_Datatype MPI_Msg;
 	struct msg {

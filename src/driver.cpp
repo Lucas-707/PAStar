@@ -34,6 +34,7 @@ int main(int argc, char** argv)
 		("cutoffTime", po::value<double>()->default_value(60), "cutoff time (seconds)")
 		("screen,s", po::value<int>()->default_value(1), "screen option (0: none; 1: results; 2:all)")
 		("debugwait", po::value<int>()->default_value(0), "wait for 5 secs for vscode debugger")
+		("enlarge", po::value<int>()->default_value(1), "enlarge the map by this factor")
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
 	///////////////////////////////////////////////////////////////////////////
 	// load the instance
 	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(),
-		vm["trialNum"].as<int>());
+		vm["trialNum"].as<int>(), vm["enlarge"].as<int>());
 	//////////////////////////////////////////////////////////////////////
     // initialize the solver
 	if (vm["algo"].as<string>() == "A*")

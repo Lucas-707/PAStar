@@ -7,9 +7,11 @@
 int RANDOM_WALK_STEPS = 100000;
 
 Instance::Instance(const string& map_fname, const string& agent_fname, 
-	int num_of_agents, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
+	int num_of_agents, int enlarge_factor,
+	int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)
 {
+	enlarge = enlarge_factor;
 	bool succ = loadMap();
 	if (!succ)
 	{
@@ -278,13 +280,20 @@ bool Instance::loadMap()
 		beg++;
 		num_of_cols = atoi((*beg).c_str()); // read number of cols
 	}
+	num_of_cols *= enlarge;
+	num_of_rows *= enlarge;
 	map_size = num_of_cols * num_of_rows;
 	my_map.resize(map_size, false);
 	// read map (and start/goal locations)
-	for (int i = 0; i < num_of_rows; i++) {
+	for (int i = 0; i < num_of_rows / enlarge; i++) {
 		getline(myfile, line);
-		for (int j = 0; j < num_of_cols; j++) {
-			my_map[linearizeCoordinate(i, j)] = (line[j] != '.');
+		for (int j = 0; j < num_of_cols / enlarge; j++) {
+			for (int ii = 0; ii < enlarge; ii++) {
+			for (int jj = 0; jj < enlarge; jj++) {
+				my_map[linearizeCoordinate(i*enlarge+ii, j*enlarge+jj)] = (line[j] != '.');
+			}
+			}
+			
 		}
 	}
 	myfile.close();
@@ -411,6 +420,10 @@ bool Instance::loadAgents()
 		}
 	}
 	myfile.close();
+	for (int i=0; i<num_of_agents; i++){
+		start_locations[i] *= enlarge;
+		goal_locations[i] *= enlarge;
+	}
 	return true;
 
 }
